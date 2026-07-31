@@ -2454,6 +2454,26 @@
       for(const k of weatherKeys){ if(desc.includes(k)) return weatherZh[k]; }
       return '';
     }
+    // 常见城市英文名 -> 中文（即时兜底，无需等待地理编码）
+    const cityZh = {
+      'beijing':'北京','shanghai':'上海','guangzhou':'广州','shenzhen':'深圳','hangzhou':'杭州','chengdu':'成都','wuhan':'武汉',
+      'nanjing':'南京','xian':'西安','chongqing':'重庆','tianjin':'天津','suzhou':'苏州','shenyang':'沈阳','changsha':'长沙',
+      'kunming':'昆明','qingdao':'青岛','xiamen':'厦门','jinan':'济南','dalian':'大连','fuzhou':'福州','zhengzhou':'郑州',
+      'harbin':'哈尔滨','taiyuan':'太原','hefei':'合肥','nanchang':'南昌','shijiazhuang':'石家庄','guiyang':'贵阳','lanzhou':'兰州',
+      'haikou':'海口','sanya':'三亚','guilin':'桂林','lhasa':'拉萨','wulumqi':'乌鲁木齐','hong kong':'香港','macao':'澳门','taipei':'台北'
+    };
+    // 用经纬度反查中文城市名（免费免密钥，失败保留兜底）
+    function applyCity(lat, lon, fallbackName){
+      const setC = (n)=>{ document.getElementById('weatherCity').textContent = (n||'本地') + ' · 今日概览'; };
+      setC(cityZh[(fallbackName||'').toLowerCase()] || fallbackName); // 先即时显示中文兜底
+      if(lat && lon){
+        fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat+'&longitude='+lon+'&localityLanguage=zh')
+          .then(r=>r.json()).then(g=>{
+            const name = g.city || g.locality || g.principalSubdivision || (cityZh[(fallbackName||'').toLowerCase()]) || fallbackName;
+            setC(name);
+          }).catch(()=>{}); // 失败则保留兜底
+      }
+    }
     function loadWeather(){
       const fallback = ()=>{ document.getElementById('weatherIcon').textContent='⛅'; document.getElementById('weatherTemp').textContent='32°'; document.getElementById('weatherDesc').textContent='晴间多云'; document.getElementById('weatherCity').textContent='示意 · 今日概览'; };
       try {
@@ -2463,11 +2483,13 @@
           const desc = (cur.weatherDesc[0].value||'').toLowerCase();
           let emoji='🌡️'; for(const k of weatherKeys){ if(desc.includes(k)){ emoji=weatherMap[k]; break; } }
           const zh = zhWeather(desc) || cur.weatherDesc[0].value;
-          const area = (d.nearest_area && d.nearest_area[0] && d.nearest_area[0].areaName[0].value) || '';
+          const na = d.nearest_area && d.nearest_area[0];
+          const area = (na && na.areaName[0].value) || '';
+          const lat = na && na.latitude, lon = na && na.longitude;
           document.getElementById('weatherIcon').textContent = emoji;
           document.getElementById('weatherTemp').textContent = cur.temp_C + '°';
           document.getElementById('weatherDesc').textContent = zh;
-          document.getElementById('weatherCity').textContent = (area||'本地') + ' · 今日概览';
+          applyCity(lat, lon, area);
         }).catch(()=>fallback());
       } catch(e){ fallback(); }
     }
