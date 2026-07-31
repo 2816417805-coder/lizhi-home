@@ -2440,6 +2440,20 @@
       'moderate or heavy rain shower':'🌧️','patchy light rain':'🌦️','patchy snow possible':'🌨️',
       'blizzard':'❄️','snow':'❄️'
     };
+    // 英文天气描述 -> 中文（按关键词长度降序匹配，优先命中更具体的短语）
+    const weatherZh = {
+      'sunny':'晴','clear':'晴朗','partly cloudy':'晴间多云','cloudy':'多云','overcast':'阴',
+      'mist':'薄雾','fog':'雾','patchy rain possible':'可能有小雨','patchy rain nearby':'附近有小雨',
+      'light drizzle':'小毛毛雨','patchy light drizzle':'零星毛毛雨','light rain':'小雨','moderate rain':'中雨',
+      'heavy rain':'大雨','thundery outbreaks possible':'可能有雷暴','light rain shower':'小阵雨',
+      'moderate or heavy rain shower':'中到大阵雨','patchy light rain':'零星小雨','patchy snow possible':'可能有雪',
+      'blizzard':'暴风雪','snow':'雪'
+    };
+    const weatherKeys = Object.keys(weatherZh).sort((a,b)=>b.length-a.length);
+    function zhWeather(desc){
+      for(const k of weatherKeys){ if(desc.includes(k)) return weatherZh[k]; }
+      return '';
+    }
     function loadWeather(){
       const fallback = ()=>{ document.getElementById('weatherIcon').textContent='⛅'; document.getElementById('weatherTemp').textContent='32°'; document.getElementById('weatherDesc').textContent='晴间多云'; document.getElementById('weatherCity').textContent='示意 · 今日概览'; };
       try {
@@ -2447,11 +2461,12 @@
           const cur = d.current_condition && d.current_condition[0];
           if(!cur){ fallback(); return; }
           const desc = (cur.weatherDesc[0].value||'').toLowerCase();
-          let emoji='🌡️'; for(const k of Object.keys(weatherMap)){ if(desc.includes(k)){ emoji=weatherMap[k]; break; } }
+          let emoji='🌡️'; for(const k of weatherKeys){ if(desc.includes(k)){ emoji=weatherMap[k]; break; } }
+          const zh = zhWeather(desc) || cur.weatherDesc[0].value;
           const area = (d.nearest_area && d.nearest_area[0] && d.nearest_area[0].areaName[0].value) || '';
           document.getElementById('weatherIcon').textContent = emoji;
           document.getElementById('weatherTemp').textContent = cur.temp_C + '°';
-          document.getElementById('weatherDesc').textContent = cur.weatherDesc[0].value;
+          document.getElementById('weatherDesc').textContent = zh;
           document.getElementById('weatherCity').textContent = (area||'本地') + ' · 今日概览';
         }).catch(()=>fallback());
       } catch(e){ fallback(); }
