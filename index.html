@@ -3277,7 +3277,7 @@
     function confirmOk(){ const cb = _confirmCb; closeConfirm(); if(typeof cb === 'function') cb(); }
 
     // ===== 奖励兑换 =====
-    let myPoints=0; // 积分每次打开清零（清零）
+    let myPoints=0; loadPoints(); // 积分从本地存储恢复（持久化，跨天不清零）
     function defaultRewardRules(){
       return [
         { icon:'✅', name:'每日计划', points:1 },
