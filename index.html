@@ -3354,7 +3354,7 @@
         myPoints-=it.cost;
         try { localStorage.setItem('myPoints', myPoints); } catch(e){}
         renderReward();
-        showToast('兑换成功');
+        showToast('兑换成功，剩余 '+myPoints+' 积分');
       });
     }
     function openRewardAdd(){ rewardEditIdx=-1; document.getElementById('rewardItemModalTitle').textContent='添加商品'; document.getElementById('rewardItemIcon').value=''; document.getElementById('rewardItemName').value=''; document.getElementById('rewardItemCost').value=''; document.getElementById('rewardItemModal').classList.remove('hidden'); }
